@@ -1,0 +1,47 @@
+- name: Check Raspberry Pi system status
+  hosts: pis
+  gather_facts: no
+  tasks:
+    - name: Get CPU temperature
+      shell: vcgencmd measure_temp
+      register: temp_result
+
+    - name: Get CPU usage
+      shell: top -bn1 | grep "Cpu(s)"
+      register: cpu_usage
+
+    - name: Get memory usage
+      shell: free -h
+      register: mem_usage
+
+    - name: Get disk usage
+      shell: df -h /
+      register: disk_usage
+
+    - name: Get uptime
+      shell: uptime -p
+      register: uptime
+
+    - name: Get throttling status
+      shell: vcgencmd get_throttled
+      register: throttled
+
+    - name: Get firmware version
+      shell: vcgencmd version
+      register: firmware
+
+    - name: Print nicely formatted status block
+      debug:
+        msg: |
+          ────────────── {{ inventory_hostname }} ──────────────
+          🖥️  CPU Temp:      {{ temp_result.stdout }}
+          🧮 CPU Usage:     {{ cpu_usage.stdout }}
+          🧠 Memory Usage:
+          {{ mem_usage.stdout | indent(2) }}
+          💾 Disk Usage:
+          {{ disk_usage.stdout | indent(2) }}
+          ⏱️  Uptime:        {{ uptime.stdout }}
+          ⚡ Throttled:      {{ throttled.stdout }}
+          🏷️  Firmware:
+          {{ firmware.stdout | indent(2) }}
+          ──────────────────────────────────────────────

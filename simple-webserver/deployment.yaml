@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rpi-flask-test
+  labels:
+    app: rpi-flask-test
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: rpi-flask-test
+  template:
+    metadata:
+      labels:
+        app: rpi-flask-test
+    spec:
+      containers:
+      - name: flask
+        image: rp-master:30500/rpi-flask-test:latest   # image in your registry
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+

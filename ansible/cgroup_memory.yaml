@@ -1,0 +1,26 @@
+---
+- name: Configure cgroup memory settings on Raspberry Pis
+  hosts: pis
+  become: true
+  tasks:
+    - name: Read current cmdline.txt content
+      slurp:
+        src: /boot/firmware/cmdline.txt
+      register: cmdline_content
+
+    - name: Add cgroup parameters to cmdline.txt
+      lineinfile:
+        path: /boot/firmware/cmdline.txt
+        regexp: '^(.*)$'
+        line: "{{ (cmdline_content.content | b64decode | trim) ~ ' cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory' if 'cgroup_enable=cpuset' not in (cmdline_content.content | b64decode) else (cmdline_content.content | b64decode | trim) }}"
+      notify: Reboot required
+
+  handlers:
+    - name: Reboot required
+      reboot:
+        msg: "Reboot required after cmdline.txt modification"
+        connect_timeout: 5
+        reboot_timeout: 300
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+        test_command: whoami

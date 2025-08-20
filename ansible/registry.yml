@@ -1,0 +1,25 @@
+- hosts: pis
+  become: yes
+  tasks:
+    - name: Ensure registry config directory exists
+      file:
+        path: /etc/rancher/k3s
+        state: directory
+        mode: '0755'
+        owner: root
+        group: root
+    - name: Write registry mirror config
+      copy:
+        dest: /etc/rancher/k3s/registries.yaml
+        content: |
+          mirrors:
+            "rp-master:30500":
+              endpoint:
+                - "http://rp-master:30500"
+        mode: '0644'
+        owner: root
+        group: root
+    - name: Restart k3s or k3s-agent
+      service:
+        name: "{{ k3s_service_name }}"
+        state: restarted

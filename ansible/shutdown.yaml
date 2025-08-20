@@ -1,0 +1,5 @@
+- hosts: pis
+  become: yes
+  tasks:
+    - name: Shutdown all nodes
+      ansible.builtin.command: shutdown -h now

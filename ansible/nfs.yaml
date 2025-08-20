@@ -1,0 +1,73 @@
+- name: NFS Storage Setup for Raspberry Pi k3s Cluster
+  hosts: all
+  become: yes
+  vars:
+    ssd_device: "/dev/sda2"
+    ssd_mount_point: "/mnt/ssd"
+    nfs_export_options: "*(rw,sync,no_subtree_check)"
+    nfs_server_hostname: "rp-master"
+
+  tasks:
+    - name: Install NFS packages
+      apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      loop: "{{ ['nfs-kernel-server'] if inventory_hostname == nfs_server_hostname else ['nfs-common'] }}"
+
+    - name: Create SSD mount point
+      file:
+        path: "{{ ssd_mount_point }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Mount SSD (storage Pi only)
+      mount:
+        path: "{{ ssd_mount_point }}"
+        src: "{{ ssd_device }}"
+        fstype: ext4
+        state: mounted
+      when: inventory_hostname == nfs_server_hostname
+
+    - name: Ensure SSD is in /etc/fstab (storage Pi only)
+      mount:
+        path: "{{ ssd_mount_point }}"
+        src: "{{ ssd_device }}"
+        fstype: ext4
+        opts: defaults
+        state: present
+      when: inventory_hostname == nfs_server_hostname
+
+    - name: Configure NFS export (storage Pi only)
+      lineinfile:
+        path: /etc/exports
+        line: "{{ ssd_mount_point }} {{ nfs_export_options }}"
+        create: yes
+        state: present
+      when: inventory_hostname == nfs_server_hostname
+
+    - name: Restart NFS server (storage Pi only)
+      service:
+        name: nfs-kernel-server
+        state: restarted
+      when: inventory_hostname == nfs_server_hostname
+
+    - name: Mount NFS share (client Pis)
+      mount:
+        path: "{{ ssd_mount_point }}"
+        src: "{{ hostvars[nfs_server_hostname]['ansible_host'] | default(nfs_server_hostname) }}:{{ ssd_mount_point }}"
+        fstype: nfs
+        opts: defaults
+        state: mounted
+      when: inventory_hostname != nfs_server_hostname
+
+    - name: Ensure NFS mount in /etc/fstab (client Pis)
+      mount:
+        path: "{{ ssd_mount_point }}"
+        src: "{{ hostvars[nfs_server_hostname]['ansible_host'] | default(nfs_server_hostname) }}:{{ ssd_mount_point }}"
+        fstype: nfs
+        opts: defaults
+        state: present
+      when: inventory_hostname != nfs_server_hostname

@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rpi-stateful
+  labels:
+    app: rpi-stateful
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: rpi-stateful
+  template:
+    metadata:
+      labels:
+        app: rpi-stateful
+    spec:
+      containers:
+        - name: app
+          image: rp-master:30500/rpi-stateful:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+          - containerPort: 5000
+      volumes:
+        - name: nfs-storage
+          persistentVolumeClaim:
+            claimName: nfs-pvc
+
