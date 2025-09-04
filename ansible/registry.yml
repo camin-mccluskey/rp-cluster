@@ -13,9 +13,9 @@
         dest: /etc/rancher/k3s/registries.yaml
         content: |
           mirrors:
-            "rp-master:30500":
+            "192.168.1.100:30500":
               endpoint:
-                - "http://rp-master:30500"
+                - "http://192.168.1.100:30500"
         mode: '0644'
         owner: root
         group: root

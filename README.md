@@ -75,10 +75,10 @@ This playbook will add a registry mirror to the cluster nodes and will restart t
 We'll also need to allow our local machine to operate using a local registry:
 On mac/windows:
  • Go to Docker Desktop → Settings → Docker Engine.
- • Add `"insecure-registries": ["rp-master:30500"]` to the JSON.
+ • Add `"insecure-registries": ["192.168.1.100:30500"]` to the JSON. (also rp-mster).
  • Click “Apply & Restart”.
 On linux:
-add { "insecure-registries": ["rp-master:30500"] } to /etc/docker/daemon.json
+add { "insecure-registries": ["192.168.1.100:30500"] } to /etc/docker/daemon.json
 
 Now we can deploy our registry by running the following commands (ensuring you have set your KUBECONFIG environment variable first):
 
@@ -91,13 +91,13 @@ You can now check the registry is running by running `kubectl get pods`. You sho
 Finally, we're ready to build and push our first image to the cluster. We'll use a simple Flask application to test the cluster.
 
 First, build and tag the image:
-`docker build -t rp-master:30500/rpi-flask-test:latest ./simple-webserver`
+`docker build -t 192.168.1.100:30500/rpi-flask-test:latest ./simple-webserver`
 _it's worth noting what exactly is happening with this command. We're building the docker image from the Dockerfile in the `simple-webserver` directory. We're then tagging the image with the registry name and the port we're using for the registry (this is our local registry). We're also using the `latest` tag to indicate the latest version of the image._
 
 Now push the tagged image to the cluster:
 
-`docker push rp-master:30500/rpi-flask-test:latest`
-_Note: it's helpful to see if your image has been pushed to run `curl http://rp-master:30500/v2/_catalog`. You should see the image listed in the repositories key of the response._
+`docker push 192.168.1.100:30500/rpi-flask-test:latest`
+_Note: it's helpful to see if your image has been pushed to run `curl http://192.168.1.100:30500/v2/_catalog`. You should see the image listed in the repositories key of the response._
 
 
 Finally, with our image pushed to the registry, we can deploy our application by running:
@@ -160,8 +160,3 @@ Or to see log for all pods in a deployment
 I assume you're going to want to change something about the current code
 
 kubectl set image deployment/rpi-stateful app=rp-master:30500/rpi-stateful:latest
-
-
-
-
-

@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: flask
-        image: rp-master:30500/rpi-flask-test:latest   # image in your registry
+        image: 192.168.1.100:30500/rpi-flask-test:latest   # image in your registry
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
